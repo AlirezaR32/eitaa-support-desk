@@ -1,0 +1,28 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# node / bun
+node_modules/
+dist/
+bun.lockb.orig
+
+# env & secrets
+.env
+.env.*
+!.env.example
+
+# uploads / data
+/data/
+uploads/
+
+# editors / os
+.idea/
+.vscode/
+.DS_Store
+
+# logs
+*.log

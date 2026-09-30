@@ -1,0 +1,82 @@
+# ---------- Eitaa Support Desk :: development compose ----------
+# Local stack: postgres + backend (API+sync) + frontend (vite dev) + optional redis.
+#
+#   docker compose up -d                # postgres only (for running backend/frontend natively)
+#   docker compose --profile full up -d # everything in containers
+#   docker compose --profile worker up -d backend worker  # dedicated sync worker
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_USER: desk
+      POSTGRES_PASSWORD: desk
+      POSTGRES_DB: eitaa_desk
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U desk -d eitaa_desk"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  backend:
+    build: ./backend
+    profiles: ["full"]
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://desk:desk@postgres:5432/eitaa_desk
+      SECRET_KEY: dev-secret-key-change-me-please-0123456789
+      EITAA_SESSION_ENCRYPTION_KEY: ${EITAA_SESSION_ENCRYPTION_KEY:-}
+      CORS_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
+      EITAA_SYNC_INTERVAL: ${EITAA_SYNC_INTERVAL:-15}
+      RUN_SYNC_WORKER: "true"
+      LOG_LEVEL: INFO
+      UPLOADS_DIR: /data/uploads
+    ports:
+      - "8000:8000"
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # dedicated sync worker (same image; API containers should then set RUN_SYNC_WORKER=false)
+  worker:
+    build: ./backend
+    profiles: ["full", "worker"]
+    command: sh -c "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    environment:
+      APP_ENV: development
+      DATABASE_URL: postgresql+asyncpg://desk:desk@postgres:5432/eitaa_desk
+      SECRET_KEY: dev-secret-key-change-me-please-0123456789
+      EITAA_SESSION_ENCRYPTION_KEY: ${EITAA_SESSION_ENCRYPTION_KEY:-}
+      RUN_SYNC_WORKER: "true"
+      LOG_LEVEL: INFO
+      UPLOADS_DIR: /data/uploads
+    volumes:
+      - uploads:/data/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  frontend:
+    build: ./frontend
+    profiles: ["full"]
+    ports:
+      - "8080:80"
+    depends_on:
+      - backend
+
+  # optional: shared rate-limit storage / future pub-sub fan-out
+  redis:
+    image: redis:8-alpine
+    profiles: ["full", "redis"]
+    ports:
+      - "6379:6379"
+
+volumes:
+  pgdata:
+  uploads:

@@ -1,0 +1,37 @@
+# --- Eitaa Support Desk :: backend runtime dependencies ---
+# Python 3.11+
+
+fastapi==0.118.0
+uvicorn[standard]==0.37.0
+
+# database
+sqlalchemy[asyncio]==2.0.43
+asyncpg==0.31.0
+alembic==1.16.5
+
+# validation / settings
+pydantic==2.11.10
+pydantic-settings==2.12.0
+email-validator==2.3.0
+
+# auth / security
+pyjwt==2.10.1
+pwdlib[argon2]==0.2.1
+cryptography==46.0.5
+
+# scheduling
+apscheduler==3.11.0
+
+# uploads / sniffing
+python-multipart==0.0.21
+filetype==1.2.0
+
+# optional redis (rate-limit / pubsub backend when REDIS_URL is set)
+redis==6.4.0
+
+# --- Eitaa connectivity ---
+# eitaa-cli is an unofficial client published as a GitHub-hosted package.
+# Pinned to a verified commit for reproducible builds.
+# Offline alternative: download the repo, then:
+#   pip install ./eitaa-cli  (or `pip install eitaa_cli-0.5.0-py3-none-any.whl`)
+eitaa-cli @ git+https://github.com/EhsanAhmadzadeh/eitaa-cli.git@685a71e12d78cf58cb18074e08aad4c8e06981a0
