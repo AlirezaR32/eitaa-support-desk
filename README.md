@@ -98,7 +98,7 @@
 ## راه‌اندازی Development
 
 ```bash
-git clone https://github.com/<you>/eitaa-support-desk.git
+git clone https://github.com/AlirezaR32/eitaa-support-desk.git
 cd eitaa-support-desk
 ```
 
